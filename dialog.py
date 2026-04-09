@@ -337,8 +337,8 @@ Script format:
     parser.add_argument("--pause", type=float, default=0.4, help="Pause between lines in seconds (default: 0.4)")
     parser.add_argument("--max-silence", type=float, default=0, help="Max internal silence in seconds (default: 0, disabled)")
     parser.add_argument("--no-play", action="store_true", help="Don't play audio after rendering")
-    parser.add_argument("--stream", type=int, nargs="?", const=2, default=None,
-                        help="Stream playback while rendering (buffer N clips ahead, default: 2)")
+    parser.add_argument("--stream", type=int, default=None, metavar="N",
+                        help="Stream playback while rendering, buffer N clips ahead (default: 2 if flag used)")
     parser.add_argument("--url", default=COMFYUI_URL, help=f"ComfyUI URL (default: {COMFYUI_URL})")
     args = parser.parse_args()
 

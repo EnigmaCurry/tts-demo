@@ -14,7 +14,7 @@ play *ARGS:
 
 # Stream playback while rendering (starts playing after buffer fills)
 stream *ARGS:
-    python3 dialog.py --stream {{ARGS}}
+    python3 dialog.py --stream 2 {{ARGS}}
 
 # Speak a single line of text
 say *ARGS:
