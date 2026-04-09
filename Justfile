@@ -37,6 +37,7 @@ compress:
         out="${f%.wav}.opus"
         echo "  ${f} → ${out}"
         ffmpeg -y -i "$f" -c:a libopus -b:a 64k "$out" 2>/dev/null
+        rm "$f"
     done
     echo "Done: ${#files[@]} file(s) compressed"
 
