@@ -25,10 +25,10 @@ Multi-voice text-to-speech dialog engine using
 
 The model weights download automatically on first use.
 
-Set the ComfyUI server URL:
+Create a `.env` file with your ComfyUI server URL:
 
 ```bash
-export COMFYUI_URL=http://comfyui.example.com
+echo "COMFYUI_URL=http://comfyui.example.com" > .env
 ```
 
 ## Quick start
