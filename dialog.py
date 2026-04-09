@@ -470,18 +470,26 @@ Script format:
         stream_started = False
         buffer_size = args.stream if streaming else 0
 
+        stream_chunk_dir = tmpdir / "stream_chunks"
+        stream_chunk_dir.mkdir()
+        stream_chunk_idx = [0]
+
         def on_chunk(chunk_path):
             """Called per-chunk during rendering for streaming playback."""
             nonlocal stream_started
             if not streaming:
                 return
-            # Convert chunk for playback
-            ensure_pcm_wav(chunk_path)
-            stream_ready.append(str(chunk_path))
+            # Copy chunk to persistent location (render_line cleans its tmpdir)
+            safe_copy = stream_chunk_dir / f"chunk_{stream_chunk_idx[0]:04d}.wav"
+            stream_chunk_idx[0] += 1
+            shutil.copy2(chunk_path, safe_copy)
+            ensure_pcm_wav(safe_copy)
+            stream_ready.append(str(safe_copy))
             # Once buffer is full, start draining
             if len(stream_ready) > buffer_size:
                 stream_started = True
-            if stream_started and stream_ready:
+            # Drain all ready clips beyond the buffer
+            while stream_started and len(stream_ready) > 0:
                 clip_queue.put(stream_ready.pop(0))
 
         for i, (role, text, line_params) in enumerate(lines):
