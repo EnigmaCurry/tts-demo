@@ -3,11 +3,13 @@
 
 import argparse
 import array
+import queue
 import shutil
 import struct
 import subprocess
 import sys
 import tempfile
+import threading
 import wave
 from pathlib import Path
 
@@ -282,6 +284,33 @@ def play_audio(path):
     print(f"No audio player found. File saved to: {path}")
 
 
+def find_player():
+    """Find an available audio player."""
+    for player in ["pw-play", "paplay", "aplay", "mpv", "ffplay"]:
+        if shutil.which(player):
+            return player
+    return None
+
+
+def play_clip(player, path):
+    """Play a single clip with the given player."""
+    args = [player]
+    if player == "ffplay":
+        args += ["-nodisp", "-autoexit"]
+    args.append(str(path))
+    subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def stream_player(clip_queue, player):
+    """Background thread that plays clips from a queue."""
+    while True:
+        clip = clip_queue.get()
+        if clip is None:
+            break
+        play_clip(player, clip)
+        clip_queue.task_done()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Render a play script with multiple TTS voices",
@@ -308,6 +337,8 @@ Script format:
     parser.add_argument("--pause", type=float, default=0.4, help="Pause between lines in seconds (default: 0.4)")
     parser.add_argument("--max-silence", type=float, default=0, help="Max internal silence in seconds (default: 0, disabled)")
     parser.add_argument("--no-play", action="store_true", help="Don't play audio after rendering")
+    parser.add_argument("--stream", type=int, nargs="?", const=2, default=None,
+                        help="Stream playback while rendering (buffer N clips ahead, default: 2)")
     parser.add_argument("--url", default=COMFYUI_URL, help=f"ComfyUI URL (default: {COMFYUI_URL})")
     args = parser.parse_args()
 
@@ -400,10 +431,27 @@ Script format:
     if not args.no_cache:
         cache_dir.mkdir(exist_ok=True)
 
+    # Set up streaming playback if requested
+    streaming = args.stream is not None
+    clip_queue = None
+    player_thread = None
+    if streaming:
+        player = find_player()
+        if not player:
+            print("No audio player found, disabling stream", file=sys.stderr)
+            streaming = False
+        else:
+            clip_queue = queue.Queue()
+            player_thread = threading.Thread(target=stream_player, args=(clip_queue, player), daemon=True)
+            player_thread.start()
+            buffer_size = args.stream
+            print(f"Streaming: buffering {buffer_size} clip(s) ahead, playing with {player}")
+
     with tempfile.TemporaryDirectory(prefix="tts-dialog-") as tmpdir:
         tmpdir = Path(tmpdir)
         wav_files = []
         ref_params = None
+        ready_clips = []  # clips ready to stream
 
         for i, (role, text, line_params) in enumerate(lines):
             voice_cfg = voices[role]
@@ -450,6 +498,17 @@ Script format:
 
             wav_files.append(dest)
 
+            # Stream: queue clip for playback once buffer is full
+            if streaming:
+                ready_clips.append(dest)
+                if len(ready_clips) > buffer_size:
+                    clip_queue.put(str(ready_clips.pop(0)))
+
+        # Flush remaining buffered clips to player
+        if streaming:
+            for clip in ready_clips:
+                clip_queue.put(str(clip))
+
         # Second pass: ensure all clips match reference sample rate
         for wav in wav_files:
             p, _ = read_wav(wav)
@@ -465,7 +524,12 @@ Script format:
         write_wav(output_path, ref_params, combined)
         print(f"Saved: {output_path}")
 
-    if not args.no_play:
+        # Wait for streaming playback to finish before tmpdir cleanup
+        if streaming and player_thread:
+            clip_queue.put(None)
+            player_thread.join()
+
+    if not args.no_play and not streaming:
         play_audio(output_path)
 
 
