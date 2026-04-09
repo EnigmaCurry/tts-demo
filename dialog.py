@@ -451,7 +451,25 @@ Script format:
         tmpdir = Path(tmpdir)
         wav_files = []
         ref_params = None
-        ready_clips = []  # clips ready to stream
+
+        # Streaming state: buffer chunks across all lines
+        stream_ready = []
+        stream_started = False
+        buffer_size = args.stream if streaming else 0
+
+        def on_chunk(chunk_path):
+            """Called per-chunk during rendering for streaming playback."""
+            nonlocal stream_started
+            if not streaming:
+                return
+            # Convert chunk for playback
+            ensure_pcm_wav(chunk_path)
+            stream_ready.append(str(chunk_path))
+            # Once buffer is full, start draining
+            if len(stream_ready) > buffer_size:
+                stream_started = True
+            if stream_started and stream_ready:
+                clip_queue.put(stream_ready.pop(0))
 
         for i, (role, text, line_params) in enumerate(lines):
             voice_cfg = voices[role]
@@ -479,10 +497,13 @@ Script format:
             if not args.no_cache and cached_file.exists():
                 shutil.copy2(cached_file, dest)
                 print(f"    cached ({cache_key})")
+                if streaming:
+                    on_chunk(str(dest))
             else:
                 sys.stdout.write("    rendering")
                 sys.stdout.flush()
-                render_line(args.url, text, voice, seed=seed, dest_path=dest, token_scale=token_scale, overrides=overrides or None)
+                render_line(args.url, text, voice, seed=seed, dest_path=dest, token_scale=token_scale,
+                            overrides=overrides or None, on_chunk=on_chunk if streaming else None)
                 # Convert to PCM WAV preserving native sample rate
                 ensure_pcm_wav(dest)
                 if lpf:
@@ -498,16 +519,10 @@ Script format:
 
             wav_files.append(dest)
 
-            # Stream: queue clip for playback once buffer is full
-            if streaming:
-                ready_clips.append(dest)
-                if len(ready_clips) > buffer_size:
-                    clip_queue.put(str(ready_clips.pop(0)))
-
-        # Flush remaining buffered clips to player
+        # Flush remaining buffered chunks to player
         if streaming:
-            for clip in ready_clips:
-                clip_queue.put(str(clip))
+            for clip in stream_ready:
+                clip_queue.put(clip)
 
         # Second pass: ensure all clips match reference sample rate
         for wav in wav_files:

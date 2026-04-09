@@ -259,8 +259,12 @@ def _render_single(base_url, text, voice, seed, dest_path, token_scale=1.0, over
     return dest_path
 
 
-def render_line(base_url, text, voice, seed=1, dest_path=None, token_scale=1.0, overrides=None):
-    """Render text to a .wav file, splitting long text into sentences."""
+def render_line(base_url, text, voice, seed=1, dest_path=None, token_scale=1.0, overrides=None, on_chunk=None):
+    """Render text to a .wav file, splitting long text into sentences.
+
+    on_chunk: optional callback(path) called after each chunk is rendered,
+    for streaming playback.
+    """
     # Allow seed override from overrides
     if overrides and "seed" in overrides:
         seed = overrides["seed"]
@@ -270,7 +274,10 @@ def render_line(base_url, text, voice, seed=1, dest_path=None, token_scale=1.0, 
 
     # Short text: render directly
     if len(sentences) <= 1:
-        return _render_single(base_url, sentences[0] if sentences else text, voice, seed, dest_path, token_scale=token_scale, overrides=overrides)
+        _render_single(base_url, sentences[0] if sentences else text, voice, seed, dest_path, token_scale=token_scale, overrides=overrides)
+        if on_chunk:
+            on_chunk(dest_path)
+        return dest_path
 
     # Long text: render each sentence, then concatenate with ffmpeg
     import tempfile
@@ -282,6 +289,8 @@ def render_line(base_url, text, voice, seed=1, dest_path=None, token_scale=1.0, 
         sys.stdout.flush()
         _render_single(base_url, sentence, voice, seed + i, part_path, token_scale=token_scale, overrides=overrides)
         parts.append(part_path)
+        if on_chunk:
+            on_chunk(part_path)
 
     # Concatenate with ffmpeg
     list_file = os.path.join(tmpdir, "concat.txt")
