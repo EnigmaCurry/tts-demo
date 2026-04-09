@@ -14,7 +14,7 @@ _tts_voice_fn() {
     if [ $# -eq 0 ]; then
         python3 "${TTS_DEMO_DIR}/tts.py" -v "$voice"
     else
-        python3 "${TTS_DEMO_DIR}/tts.py" -v "$voice" "$*"
+        python3 "${TTS_DEMO_DIR}/tts.py" -v "$voice" "$@"
     fi
 }
 
