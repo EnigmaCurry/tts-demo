@@ -137,6 +137,27 @@ just say "Hello world"
 just say -- -v feynman "Hello world"
 ```
 
+## Voice aliases
+
+Source `tts-voices.bash` to create shell functions for each voice in
+`voices/`. Add this to your `~/.bashrc`:
+
+```bash
+export COMFYUI_URL=http://comfyui.example.com
+source ~/git/vendor/enigmacurry/tts-demo/tts-voices.bash
+```
+
+This creates a function for each `.wav` file in `voices/`. For example,
+`voices/mcgill.wav` creates a `mcgill` command:
+
+```bash
+mcgill "hello there"         # speak text with the mcgill voice
+mcgill                       # read from stdin
+mcgill -s 42 "hello there"   # pass flags through to tts.py
+```
+
+Run `tts_load_voices` to reload after adding new voice files.
+
 ## Cleanup
 
 ```bash
