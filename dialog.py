@@ -28,28 +28,30 @@ def apply_lpf(path, cutoff_hz):
     Path(tmp).replace(path)
 
 
-def apply_amp(path, gain):
-    """Amplify audio by a gain factor using ffmpeg. 1.0 = no change."""
-    tmp = str(path) + ".amp.wav"
-    result = subprocess.run(
-        ["ffmpeg", "-y", "-i", str(path), "-af", f"volume={gain}", tmp],
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"ffmpeg amp failed: {result.stderr.decode(errors='replace')}")
-    Path(tmp).replace(path)
+def apply_audio_fx(path, amp=None, comp=None):
+    """Apply compression and amplification in a single ffmpeg pass.
 
+    Order: compress → amplify → limiter (prevents clipping).
+    """
+    filters = []
+    if comp is not None:
+        filters.append(f"acompressor=threshold={comp}dB:ratio=4:attack=5:release=50")
+    if amp is not None and float(amp) != 1.0:
+        filters.append(f"volume={amp}")
+    # Limiter to prevent clipping
+    filters.append("alimiter=limit=0.95:level=false")
 
-def apply_compressor(path, threshold=-20, ratio=4, attack=5, release=50):
-    """Apply dynamic range compression using ffmpeg acompressor."""
-    tmp = str(path) + ".comp.wav"
-    af = f"acompressor=threshold={threshold}dB:ratio={ratio}:attack={attack}:release={release}"
+    if not filters:
+        return
+
+    tmp = str(path) + ".fx.wav"
+    af = ",".join(filters)
     result = subprocess.run(
         ["ffmpeg", "-y", "-i", str(path), "-af", af, tmp],
         capture_output=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(f"ffmpeg compressor failed: {result.stderr.decode(errors='replace')}")
+        raise RuntimeError(f"ffmpeg fx failed: {result.stderr.decode(errors='replace')}")
     Path(tmp).replace(path)
 
 
@@ -555,12 +557,14 @@ Script format:
                 ensure_pcm_wav(dest)
                 if lpf:
                     apply_lpf(dest, int(lpf))
-                if amp is not None and float(amp) != 1.0:
-                    apply_amp(dest, float(amp))
-                    print(f" [amp={amp}]", end="")
-                if comp is not None:
-                    apply_compressor(dest, threshold=float(comp))
-                    print(f" [comp={comp}dB]", end="")
+                if (amp is not None and float(amp) != 1.0) or comp is not None:
+                    apply_audio_fx(dest, amp=amp, comp=comp)
+                    fx = []
+                    if comp is not None:
+                        fx.append(f"comp={comp}dB")
+                    if amp is not None and float(amp) != 1.0:
+                        fx.append(f"amp={amp}")
+                    print(f" [{' '.join(fx)}]", end="")
                 print(f" done ({cache_key})")
                 # Store in cache
                 if not args.no_cache:
