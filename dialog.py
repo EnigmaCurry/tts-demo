@@ -40,6 +40,19 @@ def apply_amp(path, gain):
     Path(tmp).replace(path)
 
 
+def apply_compressor(path, threshold=-20, ratio=4, attack=5, release=50):
+    """Apply dynamic range compression using ffmpeg acompressor."""
+    tmp = str(path) + ".comp.wav"
+    af = f"acompressor=threshold={threshold}dB:ratio={ratio}:attack={attack}:release={release}"
+    result = subprocess.run(
+        ["ffmpeg", "-y", "-i", str(path), "-af", af, tmp],
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg compressor failed: {result.stderr.decode(errors='replace')}")
+    Path(tmp).replace(path)
+
+
 def ensure_pcm_wav(path, sample_rate=None, channels=1):
     """Convert any audio file to 16-bit PCM WAV using ffmpeg."""
     tmp = str(path) + ".converting.wav"
@@ -430,6 +443,7 @@ Script format:
         token_scale = overrides.pop("token_scale", args.token_scale)
         overrides.pop("lpf", None)
         overrides.pop("amp", None)
+        overrides.pop("comp", None)
         overrides.pop("chunk_words", None)
         seed = overrides.pop("seed", voice_cfg.get("seed", args.seed))
         prompt = build_prompt(text, voice, seed, token_scale=token_scale, overrides=overrides or None)
@@ -515,12 +529,13 @@ Script format:
             token_scale = overrides.pop("token_scale", args.token_scale)
             lpf = overrides.pop("lpf", None)
             amp = overrides.pop("amp", None)
+            comp = overrides.pop("comp", None)
             # Seed priority: line override > voice default > CLI default
             seed = overrides.pop("seed", voice_cfg.get("seed", args.seed))
 
             # Build prompt to compute cache key
             prompt = build_prompt(text, voice, seed, token_scale=token_scale, overrides=overrides or None)
-            cache_key = prompt_hash(prompt, lpf=lpf, amp=amp)
+            cache_key = prompt_hash(prompt, lpf=lpf, amp=amp, comp=comp)
             cached_file = cache_dir / f"{cache_key}.wav"
             dest = tmpdir / f"{i:04d}_{role}.wav"
 
@@ -543,6 +558,9 @@ Script format:
                 if amp is not None and float(amp) != 1.0:
                     apply_amp(dest, float(amp))
                     print(f" [amp={amp}]", end="")
+                if comp is not None:
+                    apply_compressor(dest, threshold=float(comp))
+                    print(f" [comp={comp}dB]", end="")
                 print(f" done ({cache_key})")
                 # Store in cache
                 if not args.no_cache:
