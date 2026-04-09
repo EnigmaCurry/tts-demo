@@ -5,16 +5,16 @@
 ## For example, voices/mcgill.wav creates a function `mcgill` so you can run:
 ##   mcgill hello there whatever
 ## which is equivalent to:
-##   echo "hello there whatever" | just say -- -v mcgill
+##   python3 tts.py -v mcgill "hello there whatever"
 
 TTS_DEMO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 _tts_voice_fn() {
     local voice="$1"; shift
     if [ $# -eq 0 ]; then
-        just -f "${TTS_DEMO_DIR}/Justfile" -d "${TTS_DEMO_DIR}" say -- -v "$voice"
+        python3 "${TTS_DEMO_DIR}/tts.py" -v "$voice"
     else
-        echo "$*" | just -f "${TTS_DEMO_DIR}/Justfile" -d "${TTS_DEMO_DIR}" say -- -v "$voice"
+        python3 "${TTS_DEMO_DIR}/tts.py" -v "$voice" "$*"
     fi
 }
 
