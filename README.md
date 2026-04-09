@@ -30,7 +30,13 @@ just compress                          # encode output/*.wav to opus
 
 ## Voices
 
-Store reference `.wav` files in `voices/`. Sync them to the ComfyUI server:
+Place reference voice samples in the `voices/` directory as `.wav` files.
+Each sample should be 20–60 seconds of clear speech from the target voice
+(no music, minimal background noise). Longer samples give better voice
+cloning quality. The filename becomes the voice name in scripts
+(e.g. `voices/feynman.wav` → `FEYNMAN = feynman`).
+
+Sync them to the ComfyUI server:
 
 ```bash
 just sync              # upload new voices (skips existing)
