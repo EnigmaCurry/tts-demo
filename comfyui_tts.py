@@ -207,7 +207,7 @@ def prompt_hash(prompt, lpf=None, amp=None):
     }
     if lpf:
         key["lpf"] = lpf
-    if amp and amp != 1:
+    if amp is not None:
         key["amp"] = amp
     canonical = json.dumps(key, sort_keys=True)
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
