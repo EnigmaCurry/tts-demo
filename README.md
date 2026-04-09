@@ -148,12 +148,12 @@ source ~/git/vendor/enigmacurry/tts-demo/tts-voices.bash
 ```
 
 This creates a function for each `.wav` file in `voices/`. For example,
-`voices/mcgill.wav` creates a `mcgill` command:
+`voices/mcgill.wav` creates a `say-mcgill` command:
 
 ```bash
-mcgill "hello there"         # speak text with the mcgill voice
-mcgill                       # read from stdin
-mcgill -s 42 "hello there"   # pass flags through to tts.py
+say-mcgill "hello there"         # speak text with the mcgill voice
+say-mcgill                       # read from stdin
+say-mcgill -s 42 "hello there"   # pass flags through to tts.py
 ```
 
 Run `tts_load_voices` to reload after adding new voice files.

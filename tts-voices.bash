@@ -2,8 +2,8 @@
 ## Usage: source ~/git/vendor/enigmacurry/tts-demo/tts-voices.bash
 ##
 ## Creates a shell function for each .wav file in the voices/ directory.
-## For example, voices/mcgill.wav creates a function `mcgill` so you can run:
-##   mcgill hello there whatever
+## For example, voices/mcgill.wav creates a function `say-mcgill` so you can run:
+##   say-mcgill hello there whatever
 ## which is equivalent to:
 ##   python3 tts.py -v mcgill "hello there whatever"
 
@@ -29,8 +29,8 @@ tts_load_voices() {
     for wav in "${TTS_DEMO_DIR}"/voices/*.wav; do
         [ -f "$wav" ] || continue
         name="$(basename "$wav" .wav)"
-        eval "${name}() { _tts_voice_fn ${name} \"\$@\"; }"
-        complete -F _tts_voice_completions "$name"
+        eval "say-${name}() { _tts_voice_fn ${name} \"\$@\"; }"
+        complete -F _tts_voice_completions "say-${name}"
     done
 }
 
