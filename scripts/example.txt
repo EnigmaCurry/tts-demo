@@ -1,0 +1,14 @@
+# Example dialog script
+# Voice files must exist on the ComfyUI server (use sync-voices.py)
+
+[voices]
+NARRATOR = despotism-doc.wav
+WALT = walt-danger.wav
+FOX = fox-mulder.wav
+
+[dialog]
+NARRATOR: Two colleagues meet in the hallway on a Monday morning.
+WALT: Hey Fox, did you see the new deployment pipeline?
+FOX: Yeah, I spent all weekend reading the docs. It's actually pretty slick.
+WALT: I know, right? The rollback feature alone is worth the switch.
+NARRATOR: They walked toward the coffee machine, still deep in conversation.

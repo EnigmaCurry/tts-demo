@@ -1,0 +1,56 @@
+# The Fundamental Science Debate
+# Voices: Fox Mulder narrates, Walter White and Richard Feynman debate
+
+[voices]
+FOX = fox-mulder.wav chunk_words=20
+WALT = walt-danger.wav chunk_words=20 lpf=2500
+FEYNMAN = feynman.wav chunk_words=30
+
+[dialog]
+FOX: [exaggeration=0.3 seed=5 temp=0.6 chunk_words=20]
+    What you're about to hear is a conversation that was never
+    supposed to happen. Two brilliant minds, each convinced their
+    discipline holds the key to reality itself. But ask yourself: who
+    decided there had to be only one answer?
+
+WALT: [exaggeration=0.4 seed=5 temp=0.6 chunk_words=15 token_scale=1.2]
+    Let me be perfectly clear. Chemistry is the study of matter, and matter
+    is what everything is made of. You want to understand life? Disease?
+    Explosions? It all comes down to chemistry.
+
+FEYNMAN:
+    Oh sure, chemistry is wonderful, I love chemistry! But you see, when
+    you really get down to it, your chemicals are just atoms, and atoms are
+    just physics. You're doing physics and calling it something else!
+
+WALT: [exaggeration=0.3 seed=5 temp=0.6]
+    That's reductive and you know it. When I synthesize a compound, I'm not
+    solving Schrodinger's equation. I'm working with emergent properties that
+    physics alone cannot predict.
+
+FEYNMAN: [exaggeration=0.5 seed=5 temp=0.6 token_scale=1.2]
+    Cannot predict... Yet! That's the whole game. Everything your molecules
+    do, they do because of the electromagnetic force and quantum mechanics.
+    Chemistry is applied physics, whether you like it or not.
+
+WALT: [exaggeration=0.6 seed=159 temp=0.7]
+    Applied physics. You know what else is applied physics? A brick falling
+    on your head. That doesn't make masonry a branch of physics.
+
+FEYNMAN: [exaggeration=0.7 seed=259 temp=0.8]
+    Well actually it kind of does! Look, I'm not trying to insult
+    chemistry. I'm saying there's a hierarchy, and at the bottom of that
+    hierarchy, holding everything up, is physics.
+
+WALT: [exaggeration=0.3 seed=5 temp=0.6]
+    At the bottom. Interesting choice of words. Because from where I stand,
+    chemistry is where the real complexity lives. Physics gives you rules.
+    Chemistry gives you the world.
+
+FOX: [exaggeration=0.5 seed=420 temp=0.6 token_scale=1.5]
+    And there it is. Two men, both so certain that their framework is the
+    foundation of reality. But maybe the real conspiracy is the question
+    itself. Who benefits from keeping these disciplines separate? What if
+    the truth is that neither chemistry nor physics is fundamental? What if
+    the real answer is something neither of them wants to look at? Something
+    hidden, deliberately, from both of them. Think about it.
