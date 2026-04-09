@@ -304,7 +304,7 @@ def render_line(base_url, text, voice, seed=1, dest_path=None, token_scale=1.0, 
 
     import subprocess
     result = subprocess.run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_file, "-c", "copy", str(dest_path)],
+        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_file, "-c:a", "pcm_s16le", str(dest_path)],
         capture_output=True,
     )
     if result.returncode != 0:
