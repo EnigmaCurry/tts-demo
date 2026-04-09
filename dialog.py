@@ -292,19 +292,32 @@ def find_player():
     return None
 
 
+_current_player_proc = None
+_stream_stop = threading.Event()
+
+
 def play_clip(player, path):
     """Play a single clip with the given player."""
+    global _current_player_proc
+    if _stream_stop.is_set():
+        return
     args = [player]
     if player == "ffplay":
         args += ["-nodisp", "-autoexit"]
     args.append(str(path))
-    subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    _current_player_proc = proc
+    proc.wait()
+    _current_player_proc = None
 
 
 def stream_player(clip_queue, player):
     """Background thread that plays clips from a queue."""
-    while True:
-        clip = clip_queue.get()
+    while not _stream_stop.is_set():
+        try:
+            clip = clip_queue.get(timeout=0.1)
+        except queue.Empty:
+            continue
         if clip is None:
             break
         play_clip(player, clip)
@@ -548,5 +561,15 @@ Script format:
         play_audio(output_path)
 
 
+def _cleanup_on_exit(*_):
+    """Kill player process and stop stream thread on Ctrl+C."""
+    _stream_stop.set()
+    if _current_player_proc:
+        _current_player_proc.kill()
+    sys.exit(1)
+
+
 if __name__ == "__main__":
+    import signal
+    signal.signal(signal.SIGINT, _cleanup_on_exit)
     main()
