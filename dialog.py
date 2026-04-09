@@ -543,8 +543,9 @@ Script format:
                 ensure_pcm_wav(dest)
                 if lpf:
                     apply_lpf(dest, int(lpf))
-                if amp and amp != 1:
+                if amp is not None and float(amp) != 1.0:
                     apply_amp(dest, float(amp))
+                    print(f" [amp={amp}]", end="")
                 print(f" done ({cache_key})")
                 # Store in cache
                 if not args.no_cache:
