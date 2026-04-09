@@ -55,17 +55,16 @@ def apply_audio_fx(path, amp=None, comp=None):
     Path(tmp).replace(path)
 
 
-def normalize_pcm(path):
-    """Normalize audio to -1dBFS peak using ffmpeg loudnorm or volume filter."""
-    tmp = str(path) + ".norm.wav"
-    # Two-pass loudnorm for consistent levels
-    result = subprocess.run(
-        ["ffmpeg", "-y", "-i", str(path), "-af", "loudnorm=I=-16:TP=-1:LRA=11", tmp],
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"ffmpeg normalize failed: {result.stderr.decode(errors='replace')}")
-    Path(tmp).replace(path)
+def normalize_pcm(path, target_peak=0.9):
+    """Peak-normalize audio to a fixed target. Deterministic — same peak level every clip."""
+    params, samples = read_wav(path)
+    peak = clip_peak(samples, params)
+    if peak < 0.001:
+        return
+    scale = target_peak / peak
+    normalized = array.array(samples.typecode,
+        [max(-32768, min(32767, int(s * scale))) for s in samples])
+    write_wav(path, params, normalized)
 
 
 def ensure_pcm_wav(path, sample_rate=None, channels=1):
