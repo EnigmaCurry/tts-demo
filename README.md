@@ -6,12 +6,24 @@ Multi-voice text-to-speech dialog engine using
 
 ## Prerequisites
 
-- ComfyUI with
+- [ComfyUI](https://github.com/comfyanonymous/ComfyUI) with
   [ComfyUI-ChatterboxTTS](https://github.com/DreamWaltz-AI/ComfyUI-ChatterboxTTS)
-  installed
 - Python 3 (no third-party packages)
 - ffmpeg
 - [just](https://github.com/casey/just)
+
+### Installing ChatterboxTTS in ComfyUI
+
+1. Open the ComfyUI web interface
+2. Click the **Manager** button (install
+   [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager) first
+   if you don't have it)
+3. Click **Custom Nodes Manager**
+4. Search for `ChatterboxTTS`
+5. Click **Install** on **ComfyUI-ChatterboxTTS**
+6. Restart ComfyUI when prompted
+
+The model weights download automatically on first use.
 
 Set the ComfyUI server URL:
 
