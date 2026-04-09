@@ -270,9 +270,6 @@ def splice_audio(wav_files, params, pause_between=0.4, max_silence=0):
             samples = trim_silence(samples, params, min_silence_sec=max_silence)
             samples = trim_edges(samples, params)
 
-        # Normalize volume
-        samples = normalize(samples, params)
-
         final_dur = clip_duration(samples, params)
         print(f"    clip {i}: {raw_dur:.1f}s → {final_dur:.1f}s (peak={peak:.3f})")
 
