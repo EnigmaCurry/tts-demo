@@ -271,7 +271,7 @@ def normalize(samples, params, target_peak=0.9):
 
 
 def splice_audio(wav_files, params, pause_between=0.4, max_silence=0):
-    """Splice WAV files together with pause trimming and normalization."""
+    """Splice WAV files together with pause trimming."""
     pause_samples = make_silence(params, pause_between)
     combined = array.array(pause_samples.typecode)
 
@@ -286,7 +286,8 @@ def splice_audio(wav_files, params, pause_between=0.4, max_silence=0):
             samples = trim_edges(samples, params)
 
         final_dur = clip_duration(samples, params)
-        print(f"    clip {i}: {raw_dur:.1f}s → {final_dur:.1f}s (peak={peak:.3f})")
+        final_peak = clip_peak(samples, params)
+        print(f"    clip {i}: {raw_dur:.1f}s → {final_dur:.1f}s (raw_peak={peak:.3f} final_peak={final_peak:.3f})")
 
         combined.extend(samples)
         if i < len(wav_files) - 1:
