@@ -28,6 +28,18 @@ def apply_lpf(path, cutoff_hz):
     Path(tmp).replace(path)
 
 
+def apply_amp(path, gain):
+    """Amplify audio by a gain factor using ffmpeg. 1.0 = no change."""
+    tmp = str(path) + ".amp.wav"
+    result = subprocess.run(
+        ["ffmpeg", "-y", "-i", str(path), "-af", f"volume={gain}", tmp],
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg amp failed: {result.stderr.decode(errors='replace')}")
+    Path(tmp).replace(path)
+
+
 def ensure_pcm_wav(path, sample_rate=None, channels=1):
     """Convert any audio file to 16-bit PCM WAV using ffmpeg."""
     tmp = str(path) + ".converting.wav"
@@ -420,6 +432,7 @@ Script format:
                 overrides[k] = voice_cfg[k]
         token_scale = overrides.pop("token_scale", args.token_scale)
         overrides.pop("lpf", None)
+        overrides.pop("amp", None)
         overrides.pop("chunk_words", None)
         seed = overrides.pop("seed", voice_cfg.get("seed", args.seed))
         prompt = build_prompt(text, voice, seed, token_scale=token_scale, overrides=overrides or None)
@@ -504,12 +517,13 @@ Script format:
                     overrides[k] = voice_cfg[k]
             token_scale = overrides.pop("token_scale", args.token_scale)
             lpf = overrides.pop("lpf", None)
+            amp = overrides.pop("amp", None)
             # Seed priority: line override > voice default > CLI default
             seed = overrides.pop("seed", voice_cfg.get("seed", args.seed))
 
             # Build prompt to compute cache key
             prompt = build_prompt(text, voice, seed, token_scale=token_scale, overrides=overrides or None)
-            cache_key = prompt_hash(prompt, lpf=lpf)
+            cache_key = prompt_hash(prompt, lpf=lpf, amp=amp)
             cached_file = cache_dir / f"{cache_key}.wav"
             dest = tmpdir / f"{i:04d}_{role}.wav"
 
@@ -529,6 +543,8 @@ Script format:
                 ensure_pcm_wav(dest)
                 if lpf:
                     apply_lpf(dest, int(lpf))
+                if amp and amp != 1:
+                    apply_amp(dest, float(amp))
                 print(f" done ({cache_key})")
                 # Store in cache
                 if not args.no_cache:
