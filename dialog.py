@@ -55,6 +55,19 @@ def apply_audio_fx(path, amp=None, comp=None):
     Path(tmp).replace(path)
 
 
+def normalize_pcm(path):
+    """Normalize audio to -1dBFS peak using ffmpeg loudnorm or volume filter."""
+    tmp = str(path) + ".norm.wav"
+    # Two-pass loudnorm for consistent levels
+    result = subprocess.run(
+        ["ffmpeg", "-y", "-i", str(path), "-af", "loudnorm=I=-16:TP=-1:LRA=11", tmp],
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg normalize failed: {result.stderr.decode(errors='replace')}")
+    Path(tmp).replace(path)
+
+
 def ensure_pcm_wav(path, sample_rate=None, channels=1):
     """Convert any audio file to 16-bit PCM WAV using ffmpeg."""
     tmp = str(path) + ".converting.wav"
@@ -556,6 +569,8 @@ Script format:
                             overrides=overrides or None, on_chunk=on_chunk if streaming else None)
                 # Convert to PCM WAV preserving native sample rate
                 ensure_pcm_wav(dest)
+                # Normalize to -1dBFS before applying FX so amp=1 is full volume
+                normalize_pcm(dest)
                 if lpf:
                     apply_lpf(dest, int(lpf))
                 if (amp is not None and float(amp) != 1.0) or comp is not None:
