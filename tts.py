@@ -28,7 +28,7 @@ def main():
     parser.add_argument("text", nargs="?", help="Text to speak")
     parser.add_argument("-v", "--voice", default="despotism-doc.wav", help="Voice reference filename (default: despotism-doc.wav)")
     parser.add_argument("-o", "--output", default=None, help="Output .wav path (default: ~/Desktop/tts_output.wav)")
-    parser.add_argument("-s", "--seed", type=int, default=None, help="RNG seed (default: random)")
+    parser.add_argument("-s", "--seed", type=int, default=1, help="RNG seed (default: 1)")
     parser.add_argument("-t", "--token-scale", type=float, default=1.0, help="Scale auto-estimated token count (default: 1.0)")
     parser.add_argument("--no-play", action="store_true", help="Don't play audio after download")
     parser.add_argument("--url", default=COMFYUI_URL, help=f"ComfyUI URL (default: {COMFYUI_URL})")
