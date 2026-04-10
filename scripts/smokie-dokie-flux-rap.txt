@@ -1,0 +1,162 @@
+# Smokie Dokie Flux Rap
+# Voices: SMOKIE performs the main rap, FLUX punches transitions, OOZE handles surreal refrains
+
+[voices]
+SMOKIE = linus.wav chunk_words=12 lpf=2000
+FLUX = steve.wav chunk_words=10  lpf=1800
+OOZE = mckenna.wav chunk_words=16
+
+[dialog]
+FLUX: [exaggeration=0.55 seed=21 temp=0.72 token_scale=1.15]
+    A rap. Let it roll.
+
+SMOKIE: [exaggeration=0.42 seed=101 temp=0.74 chunk_words=10 token_scale=1.12]
+    Okie dokie better smokie whatcha gonna doodly doo?
+    Fetchly betchly normalize fluxa buncha voodoo stew.
+    Retchly rented variously purged a Wrencha Potentia of portman deux.
+    Tortentia of La mencha I want mine desperately candied through.
+
+FLUX: [exaggeration=0.6 seed=88 temp=0.8 chunk_words=8]
+    Candied through. Say it true.
+
+SMOKIE: [exaggeration=0.44 seed=102 temp=0.73 chunk_words=10]
+    I betcha they'll letchya remember their name.
+    To proclaimly for famely in family of all.
+    Ally of always and ali of ollie.
+    The oxen free. You do you. Of Rue and Two. I can do too.
+    Of course it's you.
+
+SMOKIE: [exaggeration=0.47 seed=106 temp=0.76 chunk_words=10]
+    A bender of burden of brumulent bomb.
+    An alpha of allusion and asplendor of all.
+    Zeno Ygdrasil Xavier and more.
+    A literature of obscurity and the corridors outpour.
+
+OOZE: [exaggeration=0.52 seed=15 temp=0.69 chunk_words=15]
+    In store for the future this turns into wine.
+    A drink most bitter, but whose temple is not mine.
+
+FLUX: [exaggeration=0.7 seed=47 temp=0.84 chunk_words=7]
+    Disgrace. Shift the shape.
+
+SMOKIE: [exaggeration=0.5 seed=108 temp=0.77 chunk_words=10 token_scale=1.1]
+    Okra doctrine chokey token what's the mutiny mean?
+    Snatchly batchly butter the ladder with a laser tangerine sheen.
+    Crutch of a century bent through a vellum ravine.
+    I seen what the steam meant stitched in the sequins between.
+
+SMOKIE: [exaggeration=0.46 seed=109 temp=0.75 chunk_words=10]
+    A hammer of honey and a hiss in the hall.
+    A calliope collapse with a carnival drawl.
+    You better get ready when the ready gets raw.
+    A lawfully awful little laugh in the maw.
+
+FLUX: [exaggeration=0.67 seed=48 temp=0.83]
+    Raw. Awful. Laugh in the maw.
+
+SMOKIE: [exaggeration=0.48 seed=110 temp=0.76 chunk_words=10]
+    Of satin disaster and a moon made of chalk.
+    I walk this geometry talking in squawk.
+    A pocket of thunder in a paper mache sock.
+    Tick tock, tip top, temple of the mock.
+
+OOZE: [exaggeration=0.58 seed=16 temp=0.71 chunk_words=14]
+    We bury the burden in a burgundy breeze.
+    A sleaze of annunciation in the roots of the trees.
+
+SMOKIE: [exaggeration=0.47 seed=111 temp=0.75 chunk_words=10]
+    Please if you please there's a freeze in the bees.
+    They hum hallelujah through the holes in the keys.
+    And what do you know but a nowhere appeared.
+    With a beard made of mirrors and a voice weirdly cleared.
+
+OOZE: [exaggeration=0.64 seed=17 temp=0.74 token_scale=1.12]
+    He said this is the season of the secretly smeared.
+    Where the meek drink chrome and the angels get jeered.
+
+FLUX: [exaggeration=0.72 seed=49 temp=0.85]
+    Angels get jeered. Turn it again.
+
+SMOKIE: [exaggeration=0.49 seed=112 temp=0.77 chunk_words=10]
+    Clovely rover soda clover spin me through the grate.
+    Lately maybe every little echo learns to wait.
+    A plate of persuasion on a pilgrim's phonograph fate.
+    We ate from the orchard of the over articulate state.
+
+SMOKIE: [exaggeration=0.45 seed=113 temp=0.74 chunk_words=10]
+    Great gobs of glitter in the gutters below.
+    A slow boat blowing through the undertow snow.
+    Don't you know the crow told the radio so.
+    That the show must go where the low winds go.
+
+FLUX: [exaggeration=0.63 seed=50 temp=0.8]
+    Low winds go. Let the show slide.
+
+SMOKIE: [exaggeration=0.47 seed=114 temp=0.76 chunk_words=10]
+    A mansion of mentions and a menthol parade.
+    A blade made of blessings and a bill that got paid.
+    A shade of remembrance in a rusted arcade.
+    I stayed too long in the masquerade glade.
+
+OOZE: [exaggeration=0.57 seed=18 temp=0.7 chunk_words=15]
+    But the glade got wise and the ivy got teeth.
+    And the wreath on the doorway sang grief underneath.
+
+SMOKIE: [exaggeration=0.5 seed=115 temp=0.77 chunk_words=10 token_scale=1.08]
+    Belief is a brief made of crystalline sheets.
+    That crack when you dance with your doubt in the streets.
+    So sway little satellite, stay in your tune.
+    There's a dune made of daylight on the dark side of noon.
+
+OOZE: [exaggeration=0.62 seed=19 temp=0.73]
+    And a spoonful of omen in a hot air balloon.
+    Going boom boom bloom to the bittery moon.
+
+FLUX: [exaggeration=0.75 seed=51 temp=0.87]
+    Boom boom bloom.
+
+SMOKIE: [exaggeration=0.5 seed=116 temp=0.78 chunk_words=10 token_scale=1.12]
+    Ragamuffin rocket socket tell me where it went.
+    Benthic relic, hectic ethic, heaven paying rent.
+    Spent all the evidence on elegant cement.
+    Now the president of resonance is vaguely heaven-sent.
+
+SMOKIE: [exaggeration=0.46 seed=117 temp=0.75 chunk_words=10]
+    Or maybe just maybe he's a janitor of flame.
+    Sweeping up the syllables that stagger without name.
+    Same game, new frame, choo-choo through the shame.
+    A tame little apocalypse with excellent aim.
+
+FLUX: [exaggeration=0.69 seed=52 temp=0.83]
+    Same game. New frame. Excellent aim.
+
+SMOKIE: [exaggeration=0.48 seed=118 temp=0.77 chunk_words=10]
+    I came through the cataract combing out the hiss.
+    A blissfully misshapen meteor kiss.
+    A list of all the things that begin and then miss.
+    A fistful of abyss tied up with a wish.
+
+OOZE: [exaggeration=0.6 seed=20 temp=0.72 chunk_words=15]
+    Swish goes the pendulum, slick goes the saint.
+    Paint me a complaint in invisible paint.
+
+SMOKIE: [exaggeration=0.49 seed=119 temp=0.76 chunk_words=10]
+    I ain't what I ain't and I taint what I taint.
+    But the quaint gets strange when the edges grow faint.
+    Then rise all the ribbons and wreckage of spring.
+    Every broken belonging gets a chance now to sing.
+
+SMOKIE: [exaggeration=0.44 seed=120 temp=0.74 chunk_words=10]
+    A king with no kingdom still jingles a ring.
+    And the ring means return to the root of the thing.
+
+OOZE: [exaggeration=0.64 seed=22 temp=0.74 token_scale=1.1]
+    So smokie dokie holy maybe what you gonna do?
+    When the blue turns true and the true turns through.
+
+SMOKIE: [exaggeration=0.56 seed=121 temp=0.8 chunk_words=9 token_scale=1.12]
+    You chew that clue till the clue chews you.
+    Then you laugh, step back, and let the whole world ooze.
+
+FLUX: [exaggeration=0.78 seed=53 temp=0.88 chunk_words=6]
+    Let the whole world ooze.
