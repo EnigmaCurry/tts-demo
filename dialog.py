@@ -551,23 +551,32 @@ Script format:
         stream_chunk_dir.mkdir()
         stream_chunk_idx = [0]
 
-        def on_chunk(chunk_path):
-            """Called per-chunk during rendering for streaming playback."""
-            nonlocal stream_started
-            if not streaming:
-                return
-            # Copy chunk to persistent location (render_line cleans its tmpdir)
-            safe_copy = stream_chunk_dir / f"chunk_{stream_chunk_idx[0]:04d}.wav"
-            stream_chunk_idx[0] += 1
-            shutil.copy2(chunk_path, safe_copy)
-            ensure_pcm_wav(safe_copy)
-            stream_ready.append(str(safe_copy))
-            # Once buffer is full, start draining
-            if len(stream_ready) > buffer_size:
-                stream_started = True
-            # Drain all ready clips beyond the buffer
-            while stream_started and len(stream_ready) > 0:
-                clip_queue.put(stream_ready.pop(0))
+        def make_on_chunk(lpf=None, speed=None, amp=None, comp=None):
+            """Create a per-line chunk callback that applies FX before streaming."""
+            def on_chunk(chunk_path):
+                nonlocal stream_started
+                if not streaming:
+                    return
+                # Copy chunk to persistent location (render_line cleans its tmpdir)
+                safe_copy = stream_chunk_dir / f"chunk_{stream_chunk_idx[0]:04d}.wav"
+                stream_chunk_idx[0] += 1
+                shutil.copy2(chunk_path, safe_copy)
+                ensure_pcm_wav(safe_copy)
+                normalize_pcm(safe_copy)
+                if lpf:
+                    apply_lpf(safe_copy, int(lpf))
+                if speed is not None and float(speed) != 1.0:
+                    apply_speed(safe_copy, speed)
+                if (amp is not None and float(amp) != 1.0) or comp is not None:
+                    apply_audio_fx(safe_copy, amp=amp, comp=comp)
+                stream_ready.append(str(safe_copy))
+                # Once buffer is full, start draining
+                if len(stream_ready) > buffer_size:
+                    stream_started = True
+                # Drain all ready clips beyond the buffer
+                while stream_started and len(stream_ready) > 0:
+                    clip_queue.put(stream_ready.pop(0))
+            return on_chunk
 
         for i, (role, text, line_params) in enumerate(lines):
             voice_cfg = voices[role]
@@ -595,16 +604,19 @@ Script format:
 
             print(f"  [{i+1}/{len(lines)}] {role}: {text[:60]}{'...' if len(text) > 60 else ''}")
 
+            chunk_cb = make_on_chunk(lpf=lpf, speed=speed, amp=amp, comp=comp) if streaming else None
+
             if not args.no_cache and cached_file.exists():
                 shutil.copy2(cached_file, dest)
                 print(f"    cached ({cache_key})")
                 if streaming:
-                    on_chunk(str(dest))
+                    # Cached files already have FX baked in, stream without re-applying
+                    make_on_chunk()(str(dest))
             else:
                 sys.stdout.write("    rendering")
                 sys.stdout.flush()
                 render_line(args.url, text, voice, seed=seed, dest_path=dest, token_scale=token_scale,
-                            overrides=overrides or None, on_chunk=on_chunk if streaming else None)
+                            overrides=overrides or None, on_chunk=chunk_cb)
                 # Convert to PCM WAV preserving native sample rate
                 ensure_pcm_wav(dest)
                 # Normalize to -1dBFS before applying FX so amp=1 is full volume
