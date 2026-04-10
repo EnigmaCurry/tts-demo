@@ -92,8 +92,13 @@ def main():
             print("No text provided.", file=sys.stderr)
             sys.exit(1)
 
-    output_path = Path(args.output) if args.output else Path.home() / "Desktop" / "tts_output.wav"
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    save_output = args.output is not None
+    tmpdir = Path(tempfile.mkdtemp(prefix="tts-"))
+    if save_output:
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        output_path = tmpdir / "tts_output.wav"
 
     # Split into paragraphs for streaming
     paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
@@ -107,54 +112,53 @@ def main():
             print("No audio player found, disabling stream", file=sys.stderr)
             streaming = False
 
-    if streaming:
-        clip_q = queue.Queue()
-        player_thread = threading.Thread(target=stream_player, args=(clip_q, player), daemon=True)
-        player_thread.start()
+    try:
+        if streaming:
+            clip_q = queue.Queue()
+            player_thread = threading.Thread(target=stream_player, args=(clip_q, player), daemon=True)
+            player_thread.start()
 
-        tmpdir = Path(tempfile.mkdtemp(prefix="tts-stream-"))
-        all_parts = []
+            all_parts = []
 
-        for pi, para in enumerate(paragraphs):
-            if _stream_stop.is_set():
-                break
-            part_path = tmpdir / f"para_{pi:04d}.wav"
-            print(f"[{pi+1}/{len(paragraphs)}] {para[:60]}{'...' if len(para) > 60 else ''}")
+            for pi, para in enumerate(paragraphs):
+                if _stream_stop.is_set():
+                    break
+                part_path = tmpdir / f"para_{pi:04d}.wav"
+                print(f"[{pi+1}/{len(paragraphs)}] {para[:60]}{'...' if len(para) > 60 else ''}")
 
-            def on_chunk(path, _pi=pi, _part=part_path):
-                # Copy chunk so it persists after render_line cleanup
-                safe = tmpdir / f"chunk_{_pi:04d}_{Path(path).name}"
-                shutil.copy2(path, safe)
-                clip_q.put(str(safe))
+                def on_chunk(path, _pi=pi, _part=part_path):
+                    safe = tmpdir / f"chunk_{_pi:04d}_{Path(path).name}"
+                    shutil.copy2(path, safe)
+                    clip_q.put(str(safe))
 
-            render_line(args.url, para, args.voice, seed=args.seed + pi,
-                        dest_path=str(part_path), token_scale=args.token_scale,
-                        on_chunk=on_chunk)
-            all_parts.append(str(part_path))
+                render_line(args.url, para, args.voice, seed=args.seed + pi,
+                            dest_path=str(part_path), token_scale=args.token_scale,
+                            on_chunk=on_chunk)
+                all_parts.append(str(part_path))
 
-        # Signal end of stream and wait for playback
-        clip_q.put(None)
-        player_thread.join()
+            clip_q.put(None)
+            player_thread.join()
 
-        # Concatenate all parts into final output
-        if all_parts and not _stream_stop.is_set():
-            list_file = tmpdir / "concat.txt"
-            list_file.write_text("".join(f"file '{p}'\n" for p in all_parts))
-            subprocess.run(
-                ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_file),
-                 "-c:a", "pcm_s16le", str(output_path)],
-                capture_output=True,
-            )
-            print(f"\nSaved: {output_path}")
+            if save_output and all_parts and not _stream_stop.is_set():
+                list_file = tmpdir / "concat.txt"
+                list_file.write_text("".join(f"file '{p}'\n" for p in all_parts))
+                subprocess.run(
+                    ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_file),
+                     "-c:a", "pcm_s16le", str(output_path)],
+                    capture_output=True,
+                )
+                print(f"\nSaved: {output_path}")
+        else:
+            print(f"Queuing TTS: {text[:80]}{'...' if len(text) > 80 else ''}")
+            render_line(args.url, text, args.voice, seed=args.seed, dest_path=output_path, token_scale=args.token_scale)
 
+            if save_output:
+                print(f"\nSaved: {output_path}")
+
+            if not args.no_play:
+                play_audio(output_path)
+    finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
-    else:
-        print(f"Queuing TTS: {text[:80]}{'...' if len(text) > 80 else ''}")
-        render_line(args.url, text, args.voice, seed=args.seed, dest_path=output_path, token_scale=args.token_scale)
-        print(f"\nSaved: {output_path}")
-
-        if not args.no_play:
-            play_audio(output_path)
 
 
 if __name__ == "__main__":
