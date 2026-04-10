@@ -80,6 +80,35 @@ def get_chapter_text(book, href):
     return item.get_text()
 
 
+def get_chapter_markdown(full_md, chapters):
+    """Split full markdown into per-chapter sections keyed by href."""
+    # Chapters appear as # or ## headers in the markdown; split on them
+    sections = re.split(r"(?m)^(?=#{1,2} )", full_md)
+    # Find the start of actual content (after Gutenberg preamble)
+    content_start = 0
+    for i, section in enumerate(sections):
+        if "*** START OF" in section:
+            content_start = i + 1
+            break
+
+    result = {}
+    for _, ch_title, href in chapters:
+        # Find the section whose header best matches this chapter title
+        normalized_title = _normalize(ch_title)
+        for section in sections[content_start:]:
+            first_line = section.split("\n", 1)[0].strip().lstrip("#").strip()
+            if _normalize(first_line) == normalized_title:
+                result[href] = section.strip()
+                break
+            # Handle split titles like "## CHAPTER I.\nDown the Rabbit-Hole"
+            first_two = "\n".join(section.split("\n", 2)[:2]).strip().lstrip("#").strip()
+            combined = " ".join(first_two.split("\n"))
+            if _normalize(combined) == normalized_title:
+                result[href] = section.strip()
+                break
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description="Extract EPUB to markdown")
     parser.add_argument("epub", help="Path to EPUB file")
@@ -97,7 +126,7 @@ def main():
     parser.add_argument(
         "--markdown",
         action="store_true",
-        help="Output full book as markdown (unfiltered)",
+        help="Output as markdown instead of plain text",
     )
     args = parser.parse_args()
 
@@ -112,11 +141,11 @@ def main():
             print(f"{i}: {entry.title}")
         return
 
-    if args.markdown:
-        print(book.to_markdown())
-        return
-
     chapters = get_chapters(book)
+    md_sections = None
+    if args.markdown:
+        full_md = book.to_markdown()
+        md_sections = get_chapter_markdown(full_md, chapters)
 
     if args.toc:
         if title:
@@ -126,6 +155,16 @@ def main():
             print(f"{num}: {ch_title}")
         return
 
+    def print_chapter(ch_title, href):
+        if md_sections is not None:
+            text = md_sections.get(href)
+        else:
+            text = get_chapter_text(book, href)
+            if text:
+                text = f"# {ch_title}\n\n{text}"
+        if text:
+            print(text)
+
     if args.chapter is not None:
         if args.chapter < 1 or args.chapter > len(chapters):
             print(
@@ -134,19 +173,13 @@ def main():
             )
             sys.exit(1)
         _, ch_title, href = chapters[args.chapter - 1]
-        text = get_chapter_text(book, href)
-        if text:
-            print(f"# {ch_title}\n")
-            print(text)
+        print_chapter(ch_title, href)
         return
 
     # Default: print all chapters
     for num, (_, ch_title, href) in enumerate(chapters, 1):
-        text = get_chapter_text(book, href)
-        if text:
-            print(f"# {ch_title}\n")
-            print(text)
-            print()
+        print_chapter(ch_title, href)
+        print()
 
 
 if __name__ == "__main__":
