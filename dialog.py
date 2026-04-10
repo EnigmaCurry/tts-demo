@@ -484,6 +484,7 @@ Script format:
         overrides.pop("lpf", None)
         overrides.pop("amp", None)
         overrides.pop("comp", None)
+        overrides.pop("speed", None)
         overrides.pop("chunk_words", None)
         seed = overrides.pop("seed", voice_cfg.get("seed", args.seed))
         prompt = build_prompt(text, voice, seed, token_scale=token_scale, overrides=overrides or None)
