@@ -43,6 +43,18 @@ compress:
     done
     echo "Done: ${#files[@]} file(s) compressed"
 
+# Set up Python venv with fast-ebook
+_epub-venv:
+    #!/usr/bin/env bash
+    if [ ! -d .venv ]; then
+        uv venv .venv
+        uv pip install -p .venv fast-ebook
+    fi
+
+# Read EPUB and output markdown
+epub-read *ARGS: _epub-venv
+    .venv/bin/python3 epub-read.py {{ARGS}}
+
 # Clean output and cache
 [confirm("Remove output/ and cache/ directories?")]
 clean:

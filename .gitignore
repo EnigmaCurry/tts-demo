@@ -3,3 +3,4 @@ output/
 voices/*.wav
 __pycache__/
 .env
+.venv/
