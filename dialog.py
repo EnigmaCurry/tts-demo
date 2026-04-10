@@ -56,11 +56,24 @@ def apply_audio_fx(path, amp=None, comp=None):
 
 
 def apply_speed(path, speed):
-    """Change playback speed using ffmpeg atempo (preserves pitch)."""
+    """Change playback speed without altering pitch using rubberband.
+
+    Falls back to ffmpeg atempo if rubberband is not available.
+    """
     speed = float(speed)
     if speed == 1.0:
         return
-    # atempo only accepts 0.5–100.0; chain filters for extreme values
+    tmp = str(path) + ".speed.wav"
+    # Try rubberband first (higher quality pitch-preserved time-stretch)
+    if shutil.which("rubberband"):
+        result = subprocess.run(
+            ["rubberband", "--tempo", str(speed), str(path), tmp],
+            capture_output=True,
+        )
+        if result.returncode == 0:
+            Path(tmp).replace(path)
+            return
+    # Fallback: ffmpeg atempo (only accepts 0.5–100.0 per filter)
     filters = []
     s = speed
     while s > 100.0:
@@ -71,9 +84,8 @@ def apply_speed(path, speed):
         s /= 0.5
     filters.append(f"atempo={s}")
     af = ",".join(filters)
-    tmp = str(path) + ".speed.wav"
     result = subprocess.run(
-        ["ffmpeg", "-y", "-i", str(path), "-af", af, tmp],
+        ["ffmpeg", "-y", "-i", str(path), "-af", af, "-c:a", "pcm_s16le", tmp],
         capture_output=True,
     )
     if result.returncode != 0:
