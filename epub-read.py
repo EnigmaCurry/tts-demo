@@ -128,7 +128,14 @@ def main():
         action="store_true",
         help="Output as markdown instead of plain text",
     )
+    parser.add_argument(
+        "--paragraph", type=int,
+        help="Extract a single paragraph by index (1-based, requires --chapter)",
+    )
     args = parser.parse_args()
+
+    if args.paragraph is not None and args.chapter is None:
+        parser.error("--paragraph requires --chapter")
 
     book = epub.read_epub(args.epub)
     title = get_title(book)
@@ -155,15 +162,18 @@ def main():
             print(f"{num}: {ch_title}")
         return
 
-    def print_chapter(ch_title, href):
+    def get_chapter_content(ch_title, href):
         if md_sections is not None:
-            text = md_sections.get(href)
+            return md_sections.get(href)
         else:
             text = get_chapter_text(book, href)
             if text:
-                text = f"# {ch_title}\n\n{text}"
-        if text:
-            print(text)
+                return f"# {ch_title}\n\n{text}"
+        return None
+
+    def get_paragraphs(text):
+        """Split text into paragraphs on double newlines."""
+        return [p.strip() for p in re.split(r"\n\n+", text) if p.strip()]
 
     if args.chapter is not None:
         if args.chapter < 1 or args.chapter > len(chapters):
@@ -173,7 +183,18 @@ def main():
             )
             sys.exit(1)
         _, ch_title, href = chapters[args.chapter - 1]
-        print_chapter(ch_title, href)
+        text = get_chapter_content(ch_title, href)
+        if text and args.paragraph is not None:
+            paras = get_paragraphs(text)
+            if args.paragraph < 1 or args.paragraph > len(paras):
+                print(
+                    f"Paragraph {args.paragraph} out of range (1-{len(paras)})",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            print(paras[args.paragraph - 1])
+        elif text:
+            print(text)
         return
 
     # Default: print all chapters
