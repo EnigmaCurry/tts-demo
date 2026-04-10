@@ -175,7 +175,7 @@ def split_sentences(text, max_words=25):
 OVERRIDABLE_PARAMS = {
     "temp", "flow_cfg_scale", "exaggeration", "cfg_weight",
     "repetition_penalty", "min_p", "top_p", "seed", "token_scale",
-    "chunk_words", "lpf", "amp", "comp",
+    "chunk_words", "lpf", "amp", "comp", "speed",
 }
 
 
@@ -192,13 +192,13 @@ def build_prompt(text, voice, seed, token_scale=1.0, overrides=None):
         for k, v in overrides.items():
             if k == "temp":
                 prompt["28"]["inputs"]["temperature"] = v
-            elif k in OVERRIDABLE_PARAMS and k not in ("token_scale", "chunk_words", "lpf", "amp", "comp"):
+            elif k in OVERRIDABLE_PARAMS and k not in ("token_scale", "chunk_words", "lpf", "amp", "comp", "speed"):
                 prompt["28"]["inputs"][k] = v
 
     return prompt
 
 
-def prompt_hash(prompt, lpf=None, amp=None, comp=None):
+def prompt_hash(prompt, lpf=None, amp=None, comp=None, speed=None):
     """Compute a deterministic hash of a prompt for caching."""
     # Extract the inputs that affect audio output
     key = {
@@ -211,6 +211,8 @@ def prompt_hash(prompt, lpf=None, amp=None, comp=None):
         key["amp"] = amp
     if comp is not None:
         key["comp"] = comp
+    if speed is not None:
+        key["speed"] = speed
     canonical = json.dumps(key, sort_keys=True)
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
 

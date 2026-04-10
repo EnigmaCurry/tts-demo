@@ -92,6 +92,7 @@ Set defaults per-voice in `[voices]`, override per-line with `[key=value]`:
 | `seed` | 1 | RNG seed (deterministic output) |
 | `token_scale` | 1.0 | Scale auto-estimated max_new_tokens |
 | `chunk_words` | 25 | Max words per TTS chunk |
+| `speed` | 1.0 | Playback speed multiplier (preserves pitch) |
 | `lpf` | - | Low-pass filter cutoff in Hz |
 
 ### Rendering

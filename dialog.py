@@ -55,6 +55,32 @@ def apply_audio_fx(path, amp=None, comp=None):
     Path(tmp).replace(path)
 
 
+def apply_speed(path, speed):
+    """Change playback speed using ffmpeg atempo (preserves pitch)."""
+    speed = float(speed)
+    if speed == 1.0:
+        return
+    # atempo only accepts 0.5–100.0; chain filters for extreme values
+    filters = []
+    s = speed
+    while s > 100.0:
+        filters.append("atempo=100.0")
+        s /= 100.0
+    while s < 0.5:
+        filters.append("atempo=0.5")
+        s /= 0.5
+    filters.append(f"atempo={s}")
+    af = ",".join(filters)
+    tmp = str(path) + ".speed.wav"
+    result = subprocess.run(
+        ["ffmpeg", "-y", "-i", str(path), "-af", af, tmp],
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg speed failed: {result.stderr.decode(errors='replace')}")
+    Path(tmp).replace(path)
+
+
 def normalize_pcm(path, target_peak=0.9):
     """Peak-normalize audio to a fixed target. Deterministic — same peak level every clip."""
     params, samples = read_wav(path)
@@ -544,12 +570,13 @@ Script format:
             lpf = overrides.pop("lpf", None)
             amp = overrides.pop("amp", None)
             comp = overrides.pop("comp", None)
+            speed = overrides.pop("speed", None)
             # Seed priority: line override > voice default > CLI default
             seed = overrides.pop("seed", voice_cfg.get("seed", args.seed))
 
             # Build prompt to compute cache key
             prompt = build_prompt(text, voice, seed, token_scale=token_scale, overrides=overrides or None)
-            cache_key = prompt_hash(prompt, lpf=lpf, amp=amp, comp=comp)
+            cache_key = prompt_hash(prompt, lpf=lpf, amp=amp, comp=comp, speed=speed)
             cached_file = cache_dir / f"{cache_key}.wav"
             dest = tmpdir / f"{i:04d}_{role}.wav"
 
@@ -571,6 +598,8 @@ Script format:
                 normalize_pcm(dest)
                 if lpf:
                     apply_lpf(dest, int(lpf))
+                if speed is not None and float(speed) != 1.0:
+                    apply_speed(dest, speed)
                 if (amp is not None and float(amp) != 1.0) or comp is not None:
                     apply_audio_fx(dest, amp=amp, comp=comp)
                     fx = []
@@ -579,6 +608,8 @@ Script format:
                     if amp is not None and float(amp) != 1.0:
                         fx.append(f"amp={amp}")
                     print(f" [{' '.join(fx)}]", end="")
+                if speed is not None and float(speed) != 1.0:
+                    print(f" [speed={speed}]", end="")
                 print(f" done ({cache_key})")
                 # Store in cache
                 if not args.no_cache:
