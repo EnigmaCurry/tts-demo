@@ -124,9 +124,9 @@ def main():
         "--chapter", type=int, help="Extract a single chapter by number (1-based)"
     )
     parser.add_argument(
-        "--markdown",
+        "--text",
         action="store_true",
-        help="Output as markdown instead of plain text",
+        help="Output as plain text instead of markdown",
     )
     parser.add_argument(
         "--paragraph", type=int,
@@ -150,7 +150,7 @@ def main():
 
     chapters = get_chapters(book)
     md_sections = None
-    if args.markdown:
+    if not args.text:
         full_md = book.to_markdown()
         md_sections = get_chapter_markdown(full_md, chapters)
 
@@ -199,8 +199,10 @@ def main():
 
     # Default: print all chapters
     for num, (_, ch_title, href) in enumerate(chapters, 1):
-        print_chapter(ch_title, href)
-        print()
+        text = get_chapter_content(ch_title, href)
+        if text:
+            print(text)
+            print()
 
 
 if __name__ == "__main__":
